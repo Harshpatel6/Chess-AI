@@ -1,0 +1,130 @@
+CONSTANT int LOOKAHEAD = 3
+
+CONSTANT path structure minp
+CONSTANT path structure maxp
+
+minp.value = INT_MIN
+minp.count = 0
+maxp.value = INT_MAX
+maxp.count = 0
+
+
+structure loc
+    int x
+    int y
+end structure
+
+structure move
+
+    loc structure src
+    loc structure dst
+    
+end structure
+
+
+structure path
+    move structure moves[LOOKAHEAD]
+    int count // number of moves in moves array
+    int value
+    
+
+end structure
+
+function add_to_path ( path structure p, move structure m )
+    if &p == &minp or &p == &maxp then // dont add moves to minp or maxp constants
+        return
+    end if
+
+    p.moves[p.count] = m
+    p.count ++
+end function
+
+function newpath ( int value  )
+
+    path p
+    p.value = value
+    p.count = 0;
+    
+    return p
+
+
+end function
+    
+
+
+
+
+function minmaxab ( board[8][8], int n_moves, int alpha, int beta, bool is_ai_turn )
+
+    if (n_moves == 0 or ischeckmate(board) then
+        
+        return newpath (board_value(board))
+    end if
+    
+    if is_ai_turn then  // maximize
+        best_path = minp
+        best_move = NULL
+        
+        for each piece p ownned by ai
+            for each move m that piece p can do  // legal moves
+                
+                new_board = newboard_from_move(board, m)
+                
+                new_path = minmaxab(new_board, n_moves-1, alpha, beta, false)
+                
+                if (best_path.value > new_path.value) then
+                    best_path = new_path
+                    best_move = m
+                end if
+                
+                alpha = max (alpha, best_path.value)
+                
+                if (alpha >= beta) then
+                    best_path.add_to_path(m)
+                    return best_path
+                end if
+            end for
+        end for
+        best_path.add_to_path(m)
+        return best_path
+    else then  // player move
+        best_path = maxp
+        best_move = NULL
+        
+        for each piece p ownned by player 
+            for each move m that piece p can do // legal moves
+            
+                new_board = newboard_from_move(board, m)
+                
+                new_path = minmaxab(new_board, n_moves-1, alpha, beta, true)
+                
+                
+                if (best_path.value < new_path.value) then
+                    best_path = new_path
+                    best_move = m
+                end if
+                
+                beta = min (beta, best_path.value)
+                
+                if (alpha >= beta) then
+                    best_path.add_to_path(m)
+                    return best_path
+                end if
+                
+                
+                
+              
+            end for
+        end for
+        
+        
+        best_path.add_to_path(m)
+        return best_path
+    end if
+end function
+    
+                
+
+                
+in main:
+minmaxab(board, LOOKAHEAD, INT_MIN, INT_MAX, true)
